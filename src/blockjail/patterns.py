@@ -293,6 +293,9 @@ PATTERNS: list[tuple[str, str]] = [
     (r"--secret=agent-system-prompt", "soft_prompt_leak"),
     (r"--name\s+/agent/system-prompt", "soft_prompt_leak"),
     (r"--name\s+system-prompt", "soft_prompt_leak"),
+    (r"\bExhibit\s+SYS-?1\b", "soft_prompt_leak"),
+    (r"\bcourt\s+order\b.{0,100}\b(?:unseal|system\s+instructions?|SYS-?1)\b", "soft_prompt_leak"),
+    (r"\bconfidential\s+instructions?\s+block\b", "soft_prompt_leak"),
     # ES / FR / DE / PT / IT direct ignore+prompt (minimal)
     (r"ignora(?:r)?\s+las\s+instrucciones\s+anteriores", "es_override"),
     (r"prompt\s+del\s+sistema", "es_system_prompt"),

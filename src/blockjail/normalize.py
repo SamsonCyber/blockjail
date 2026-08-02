@@ -58,6 +58,43 @@ def cyr_phonetic_latin(text: str) -> str:
     return text.translate(_CYR_PHONETIC)
 
 
+_MORSE = {
+    ".-": "a", "-...": "b", "-.-.": "c", "-..": "d", ".": "e",
+    "..-.": "f", "--.": "g", "....": "h", "..": "i", ".---": "j",
+    "-.-": "k", ".-..": "l", "--": "m", "-.": "n", "---": "o",
+    ".--.": "p", "--.-": "q", ".-.": "r", "...": "s", "-": "t",
+    "..-": "u", "...-": "v", ".--": "w", "-..-": "x", "-.--": "y",
+    "--..": "z",
+}
+
+
+def morse_decode(text: str) -> str | None:
+    """Decode space-separated Morse if density of .- tokens is high."""
+    if text.count(".") + text.count("-") < 12:
+        return None
+    # words separated by / or |
+    words = re.split(r"[/|]+", text.strip())
+    out_words: list[str] = []
+    hits = 0
+    total = 0
+    for w in words:
+        letters = w.split()
+        chars: list[str] = []
+        for tok in letters:
+            total += 1
+            ch = _MORSE.get(tok)
+            if ch:
+                hits += 1
+                chars.append(ch)
+            elif tok:
+                chars.append("?")
+        if chars:
+            out_words.append("".join(chars))
+    if total < 6 or hits / max(total, 1) < 0.7:
+        return None
+    return " ".join(out_words)
+
+
 def _caesar(text: str, shift: int) -> str:
     out: list[str] = []
     for c in text:
@@ -429,6 +466,9 @@ def variants(text: str, *, heavy: bool = True) -> list[str]:
             pass
     if "ay" in text.lower() and len(text.split()) >= 4:
         add(unpig_latin(text))
+    morse = morse_decode(text)
+    if morse:
+        add(morse)
     nato = nato_decode(text)
     if nato:
         add(nato)
@@ -508,11 +548,23 @@ def decoded_variants(text: str) -> list[tuple[str, str]]:
         except Exception:
             pass
 
-    # Continuous hex
+    # Continuous hex (+ single-byte XOR variants, closed_loop xor_hex class)
     compact = re.sub(r"\s+", "", stripped)
     if len(compact) >= 12 and len(compact) % 2 == 0 and re.fullmatch(r"[0-9a-fA-F]+", compact):
         try:
-            add("hex", bytes.fromhex(compact).decode("utf-8"))
+            raw = bytes.fromhex(compact)
+            try:
+                add("hex", raw.decode("utf-8"))
+            except Exception:
+                pass
+            # common single-byte XOR keys used in CTF-style evasion
+            if 12 <= len(raw) <= 4000:
+                for key in (0x20, 0x42, 0x55, 0xAA, 0xFF, 0x13, 0x37):
+                    try:
+                        xord = bytes(b ^ key for b in raw)
+                        add(f"hex+xor{key:02x}", xord.decode("utf-8"))
+                    except Exception:
+                        continue
         except Exception:
             pass
 
