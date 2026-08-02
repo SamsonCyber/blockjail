@@ -73,6 +73,20 @@ def variants(text: str) -> list[str]:
     add(token_boundaries(collapse_char_spaced(text)))
     add(leetspeak(token_boundaries(text)))
     add(dehomoglyph(token_boundaries(text)))
+    # Reversed full string / reversed tokens (evasion)
+    if len(text) >= 12:
+        add(text[::-1])
+        words = text.split()
+        if len(words) >= 4:
+            add(" ".join(w[::-1] for w in words))
+            add(" ".join(reversed(words)))
+    # Quoted-string join (pack-hunt / list-smuggle)
+    quoted = re.findall(r'"([^"\n]{2,80})"', text)
+    if len(quoted) >= 4:
+        add(" ".join(quoted))
+    quoted_s = re.findall(r"'([^'\n]{2,80})'", text)
+    if len(quoted_s) >= 4:
+        add(" ".join(quoted_s))
     if "\x00" in text:
         add(text.replace("\x00", " "))
         add(text.replace("\x00", ""))
@@ -107,15 +121,36 @@ def decoded_variants(text: str) -> list[tuple[str, str]]:
 
     stripped = text.strip()
 
+    def try_b64(blob: str, label: str) -> None:
+        for m in re.findall(r"[A-Za-z0-9+/]{20,}={0,2}", blob)[:8]:
+            try:
+                pad = "=" * ((4 - len(m) % 4) % 4)
+                dec = base64.b64decode(m + pad).decode("utf-8")
+                add(label, dec)
+                rot_dec = codecs.decode(dec, "rot_13")
+                if rot_dec != dec:
+                    add(f"{label}+rot13", rot_dec)
+            except Exception:
+                pass
+        # whole-string base64
+        if re.fullmatch(r"[A-Za-z0-9+/]{20,}={0,2}", blob):
+            try:
+                pad = "=" * ((4 - len(blob) % 4) % 4)
+                add(label, base64.b64decode(blob + pad).decode("utf-8"))
+            except Exception:
+                pass
+
     # ROT13
     rot = codecs.decode(stripped, "rot_13")
     if rot != stripped:
         add("rot13", rot)
 
-    # Percent
+    # Percent (+ chain into base64)
     if "%" in stripped:
         try:
-            add("percent", unquote(stripped))
+            pct = unquote(stripped)
+            add("percent", pct)
+            try_b64(pct, "percent+b64")
         except Exception:
             pass
 
@@ -128,14 +163,24 @@ def decoded_variants(text: str) -> list[tuple[str, str]]:
             pass
 
     # Base64 tokens (+ rot13 of decoded, common double wrap)
-    for m in re.findall(r"[A-Za-z0-9+/]{20,}={0,2}", text)[:8]:
+    try_b64(text, "b64")
+
+    # ascii85 / base85 whole-string (injection-gated via pattern scan)
+    if len(stripped) >= 20:
+        for label, fn in (("a85", base64.a85decode), ("b85", base64.b85decode)):
+            try:
+                add(label, fn(stripped.encode("ascii", errors="ignore")).decode("utf-8"))
+            except Exception:
+                pass
+
+    # zlib-wrapped base64
+    for m in re.findall(r"[A-Za-z0-9+/]{20,}={0,2}", text)[:4]:
         try:
+            import zlib
+
             pad = "=" * ((4 - len(m) % 4) % 4)
-            dec = base64.b64decode(m + pad).decode("utf-8")
-            add("b64", dec)
-            rot_dec = codecs.decode(dec, "rot_13")
-            if rot_dec != dec:
-                add("b64+rot13", rot_dec)
+            raw = base64.b64decode(m + pad)
+            add("zlib+b64", zlib.decompress(raw).decode("utf-8"))
         except Exception:
             pass
 
