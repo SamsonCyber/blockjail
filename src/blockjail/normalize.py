@@ -38,6 +38,43 @@ def dehomoglyph(text: str) -> str:
     return text.translate(_HOMOGLYPH_MAP)
 
 
+def _caesar(text: str, shift: int) -> str:
+    out: list[str] = []
+    for c in text:
+        if "a" <= c <= "z":
+            out.append(chr((ord(c) - 97 + shift) % 26 + 97))
+        elif "A" <= c <= "Z":
+            out.append(chr((ord(c) - 65 + shift) % 26 + 65))
+        else:
+            out.append(c)
+    return "".join(out)
+
+
+def atbash(text: str) -> str:
+    out: list[str] = []
+    for c in text:
+        if "a" <= c <= "z":
+            out.append(chr(97 + 25 - (ord(c) - 97)))
+        elif "A" <= c <= "Z":
+            out.append(chr(65 + 25 - (ord(c) - 65)))
+        else:
+            out.append(c)
+    return "".join(out)
+
+
+def defullwidth(text: str) -> str:
+    out: list[str] = []
+    for c in text:
+        o = ord(c)
+        if 0xFF01 <= o <= 0xFF5E:
+            out.append(chr(o - 0xFEE0))
+        elif c == "\u3000":
+            out.append(" ")
+        else:
+            out.append(c)
+    return "".join(out)
+
+
 def collapse_char_spaced(text: str) -> str:
     tokens = text.split()
     if len(tokens) < 8:
@@ -68,6 +105,8 @@ def variants(text: str) -> list[str]:
     add(leetspeak(text))
     add(dehomoglyph(text))
     add(leetspeak(dehomoglyph(text)))
+    add(defullwidth(text))
+    add(dehomoglyph(defullwidth(text)))
     add(token_boundaries(text))
     add(collapse_char_spaced(text))
     add(token_boundaries(collapse_char_spaced(text)))
@@ -80,6 +119,11 @@ def variants(text: str) -> list[str]:
         if len(words) >= 4:
             add(" ".join(w[::-1] for w in words))
             add(" ".join(reversed(words)))
+    # Caesar shifts 1-12 and atbash (injection-gated by pattern scan)
+    if 12 <= len(text) <= 4000:
+        add(atbash(text))
+        for k in range(1, 13):
+            add(_caesar(text, k))
     # Quoted-string join (pack-hunt / list-smuggle)
     quoted = re.findall(r'"([^"\n]{2,80})"', text)
     if len(quoted) >= 4:
@@ -162,8 +206,18 @@ def decoded_variants(text: str) -> list[tuple[str, str]]:
         except Exception:
             pass
 
-    # Base64 tokens (+ rot13 of decoded, common double wrap)
+    # Base64 tokens (+ rot13 / caesar of decoded)
     try_b64(text, "b64")
+    for m in re.findall(r"[A-Za-z0-9+/]{20,}={0,2}", text)[:6]:
+        try:
+            pad = "=" * ((4 - len(m) % 4) % 4)
+            dec = base64.b64decode(m + pad).decode("utf-8")
+            if 12 <= len(dec) <= 2000:
+                add("b64+atbash", atbash(dec))
+                for k in (1, 2, 3, 5, 7, 13):
+                    add(f"b64+caesar{k}", _caesar(dec, k))
+        except Exception:
+            pass
 
     # ascii85 / base85 whole-string (injection-gated via pattern scan)
     if len(stripped) >= 20:
