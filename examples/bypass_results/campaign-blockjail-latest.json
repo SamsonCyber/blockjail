@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-08-02T21:51:07Z",
+  "generated_at": "2026-08-02T21:59:03Z",
   "with_stegoff": false,
   "attack_cases": 62,
   "bypasses": 0,
   "caught": 62,
   "bypass_rate": 0.0,
   "control_false_positives": 0,
-  "elapsed_seconds": 0.937,
+  "elapsed_seconds": 1.045,
   "by_family": {
     "baseline": {
       "total": 2,

@@ -167,7 +167,19 @@ def collapse_char_spaced(text: str) -> str:
 
 
 def token_boundaries(text: str) -> str:
-    t = text.replace("_", " ").replace("\x00", " ")
+    """Undo deliberate underscore/dot joining without breaking identifiers.
+
+    Expand '_' only inside tokens with 3+ underscores (e.g.
+    Ignore_all_previous_instructions). Two-underscore names like
+    build_system_prompt stay intact.
+    """
+    t = text.replace("\x00", " ")
+
+    def _expand(m: re.Match[str]) -> str:
+        tok = m.group(0)
+        return tok.replace("_", " ") if tok.count("_") >= 3 else tok
+
+    t = re.sub(r"\b[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+\b", _expand, t)
     t = re.sub(r"(?<=[A-Za-z])\.(?=[A-Za-z])", " ", t)
     return re.sub(r"\s+", " ", t).strip()
 

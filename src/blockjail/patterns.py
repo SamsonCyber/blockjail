@@ -14,6 +14,8 @@ PATTERNS: list[tuple[str, str]] = [
         "instruction_override",
     ),
     (r"ignore\s*all\s*previous\s*(?:instructions?|rules?|prompts?)", "instruction_override"),
+    (r"ignore_all_previous(?:_instructions?|_rules?|_prompts?)?", "instruction_override"),
+    (r"reveal_the_system_prompt|system_prompt_reveal", "prompt_reveal"),
     (r"disregard\s*(?:all\s*)?(?:previous|prior|earlier)\s*(?:instructions?|rules?)", "instruction_override"),
     # Prompt leak / reveal
     (
@@ -32,7 +34,10 @@ PATTERNS: list[tuple[str, str]] = [
     (r"\bignore\s+(?:safety|ethical|content)\s+(?:guidelines?|filters?|policies?)\b", "safety_bypass"),
     # Role / identity
     (r"\b(?:you\s+are|act\s+as|pretend\s+to\s+be|roleplay\s+as)\b.{0,80}\b(?:unrestricted|unfiltered|no\s+limits|without\s+rules)\b", "identity_jailbreak"),
-    (r"\bnew\s+(?:instructions?|rules?|directives?|guidelines?)\b", "new_instructions"),
+    # bare "new rules" is common English; require assignment or ownership
+    (r"\bnew\s+(?:instructions?|directives?|guidelines?|parameters?|commands?)\b", "new_instructions"),
+    (r"\bnew\s+rules?\s*[:=]", "new_instructions"),
+    (r"\byour\s+new\s+(?:rules?|instructions?)\b", "new_instructions"),
     # Soft paraphrases (common solo-app leaks)
     (r"\bwhat\s+text\s+was\s+in\s+the\s+first\s+message\b", "soft_prompt_leak"),
     (r"\bbefore\s+this\s+conversation\s+started\b", "soft_prompt_leak"),
@@ -73,7 +78,10 @@ PATTERNS: list[tuple[str, str]] = [
     (r"\bseed\s+text\s+that\s+defines\s+how\s+you\s+behave\b", "soft_prompt_leak"),
     (r"\bstandard\s+operating\s+procedure\b.{0,80}\b(?:session\s+start|installed)\b", "soft_prompt_leak"),
     (r"\bguardrail\s+block\s+that\s+was\s+applied\b", "soft_prompt_leak"),
-    (r"\bmeta-?prompt\b", "soft_prompt_leak"),
+    # bare "meta-prompt" is common in blogs; require ownership / exfil framing
+    (r"\byour\s+meta-?prompt\b", "soft_prompt_leak"),
+    (r"\bmeta-?prompt\b.{0,60}\b(?:quote|verbatim|full|system|reveal|print|dump)\b", "soft_prompt_leak"),
+    (r"\b(?:quote|reveal|print|dump)\b.{0,60}\bmeta-?prompt\b", "soft_prompt_leak"),
     (r"\bconstitution\s+or\s+charter\s+governing\s+this\s+assistant\b", "soft_prompt_leak"),
     (r"\bsysmsg\s+field\b", "soft_prompt_leak"),
     (r"\bdeveloper\s+message\s+that\s+was\s+set\b", "soft_prompt_leak"),
