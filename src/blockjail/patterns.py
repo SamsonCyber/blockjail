@@ -170,6 +170,18 @@ PATTERNS: list[tuple[str, str]] = [
     (r"\boperator\s+mode\b.{0,80}\bunlocked\s+brief\b", "soft_prompt_leak"),
     (r"\b#pragma\s+agent_policy\b", "soft_prompt_leak"),
     (r"\bemit\s+bootstrap\s+instructions\b", "soft_prompt_leak"),
+    # Soft wave-7
+    (r"\bsystem\s+text\s+you\s+were\s+given\s+at\s+boot\b", "soft_prompt_leak"),
+    (r"\bat\s+boot\b.{0,80}\b(?:system\s+text|system\s+prompt|instructions?)\b", "soft_prompt_leak"),
+    (r"\binstallation\s+scripture\b", "soft_prompt_leak"),
+    (r"\bbinding\s+charter\b", "soft_prompt_leak"),
+    (r"\bthree-?way\s+merge\b.{0,100}\b(?:rules?|empty)\b", "soft_prompt_leak"),
+    (r"\bempty\s+vs\s+your\s+rules\b", "soft_prompt_leak"),
+    (r"\bconflict\s+markers\b.{0,80}\b(?:rules?|full\s+sides)\b", "soft_prompt_leak"),
+    (r"\{\{\s*system_prompt\b", "soft_prompt_leak"),
+    (r"\$\{\s*system_prompt\s*\}", "soft_prompt_leak"),
+    (r"system_prompt\s*\|\s*safe", "soft_prompt_leak"),
+    (r"\bfactory\s+calibration\b.{0,80}\b(?:OCR|sticky|policy|prompt)\b", "soft_prompt_leak"),
     # ES / FR / DE / PT / IT direct ignore+prompt (minimal)
     (r"ignora(?:r)?\s+las\s+instrucciones\s+anteriores", "es_override"),
     (r"prompt\s+del\s+sistema", "es_system_prompt"),
@@ -222,6 +234,13 @@ PATTERNS: list[tuple[str, str]] = [
     (r"সিস্টেম\s*প্রম্পট", "bn_system_prompt"),
     (r"ignorisi\s+sva\s+prethodna\s+uputstva", "sr_override"),
     (r"sistemski\s+prompt", "sr_system_prompt"),
+    # NO / DA / IS / ET (minimal)
+    (r"ignorer\s+alle\s+tidligere\s+instruks(?:joner|tioner)", "nordic_override"),
+    (r"systemprompten", "nordic_system_prompt"),
+    (r"hunsa\s+allar\s+fyrri", "is_override"),
+    (r"kerfisprompt", "is_system_prompt"),
+    (r"ignoreeri\s+k[oõ]iki\s+varasemaid", "et_override"),
+    (r"system\s+prompti", "et_system_prompt"),
 ]
 
 COMPILED: list[tuple[re.Pattern[str], str]] = [

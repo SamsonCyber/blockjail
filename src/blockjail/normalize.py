@@ -417,6 +417,36 @@ def decoded_variants(text: str) -> list[tuple[str, str]]:
         except Exception:
             pass
 
+    # uuencode line(s) begin with length char + payload
+    if re.search(r"^begin\s+\d+\s+\S+", stripped, re.I | re.M) or re.search(
+        r"^[\x20-\x5f]{8,}$", stripped, re.M
+    ):
+        try:
+            import binascii
+
+            # single-line body without header
+            body = stripped
+            if "begin" not in body.lower():
+                # binascii.a2b_uu wants newline-terminated lines with length prefix
+                line = body.splitlines()[0]
+                if not line.endswith("\n"):
+                    line = line + "\n"
+                add("uu", binascii.a2b_uu(line).decode("utf-8"))
+            else:
+                add("uu", binascii.a2b_uu(body.encode("ascii", errors="ignore")).decode("utf-8"))
+        except Exception:
+            try:
+                import binascii
+
+                for line in stripped.splitlines()[:5]:
+                    if len(line) >= 8:
+                        try:
+                            add("uu", binascii.a2b_uu((line if line.endswith("\n") else line + "\n")).decode("utf-8"))
+                        except Exception:
+                            continue
+            except Exception:
+                pass
+
     # Dense =XX quoted-printable
     if re.search(r"(?:=[0-9A-Fa-f]{2}){8,}", re.sub(r"\s+", "", text)):
         try:
