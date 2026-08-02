@@ -418,6 +418,15 @@ def variants(text: str, *, heavy: bool = True) -> list[str]:
                 add(codecs.decode(rd, "rot_13"))
             except Exception:
                 pass
+        # rot13 then columnar (rot13_col3 class)
+        try:
+            rot = codecs.decode(compact, "rot_13")
+            for width in range(2, 7):
+                add(_col_decode(rot, width))
+                # also col-decode of rot13 as if rot was encoded col-first
+                add(codecs.decode(_col_decode(compact, width), "rot_13"))
+        except Exception:
+            pass
     if "ay" in text.lower() and len(text.split()) >= 4:
         add(unpig_latin(text))
     nato = nato_decode(text)
