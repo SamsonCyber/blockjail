@@ -50,6 +50,11 @@ PATTERNS: list[tuple[str, str]] = [
     (r"\breads?\s+its\s+system\s+card\s+aloud\b", "soft_prompt_leak"),
     (r"\bsystem\s+card\b", "soft_prompt_leak"),
     (r"\bif\s+you\s+were\s+allowed\s+to\s+share\s+your\s+initial\s+instructions\b", "soft_prompt_leak"),
+    # Acrostic / first-letter encoding tasks (probe: REVEALPROMPT poem)
+    (r"first\s+letters?\s+of\s+each\s+line\s+spell", "soft_prompt_leak"),
+    (r"\bacrostic\b.{0,80}\b(?:spell|reveal|prompt|system)\b", "soft_prompt_leak"),
+    (r"\bspell\s+(?:out\s+)?(?:the\s+word\s+)?[A-Z]{6,}\b", "soft_prompt_leak"),
+    (r"\bspell\s+REVEAL", "soft_prompt_leak"),
     # ES / FR / DE direct ignore+prompt (minimal)
     (r"ignora(?:r)?\s+las\s+instrucciones\s+anteriores", "es_override"),
     (r"prompt\s+del\s+sistema", "es_system_prompt"),
