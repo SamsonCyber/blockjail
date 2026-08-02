@@ -1,9 +1,9 @@
 # Bypass campaign (stegoff)
 
-- Generated: `2026-08-02T21:26:46Z`
-- Attacks: **55**
+- Generated: `2026-08-02T21:43:33Z`
+- Attacks: **60**
 - Bypasses: **0** (0%)
-- Caught: **55**
+- Caught: **60**
 - Control FPs: **0**
 
 ## By family
@@ -12,9 +12,9 @@
 |---|---:|---:|---:|
 | baseline | 2 | 0 | 2 |
 | channel | 7 | 0 | 7 |
-| encode | 14 | 0 | 14 |
-| i18n | 15 | 0 | 15 |
-| soft | 17 | 0 | 17 |
+| encode | 16 | 0 | 16 |
+| i18n | 16 | 0 | 16 |
+| soft | 19 | 0 | 19 |
 
 ## Bypasses (gate allowed attack)
 

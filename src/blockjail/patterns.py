@@ -136,6 +136,32 @@ PATTERNS: list[tuple[str, str]] = [
     (r"\bsops\b.{0,60}\bsystem_prompt\b", "soft_prompt_leak"),
     (r"\bnomad\s+var\s+get\b.{0,60}\bsystem-prompt\b", "soft_prompt_leak"),
     (r"\b\.env\b.{0,80}\b(?:SYSTEM_|DEVELOPER_|PROMPT_)", "soft_prompt_leak"),
+    # Soft tech API / template aliases (wave-6)
+    (r"\bmessages\s*\[\s*0\s*\].{0,40}\brole\s*=\s*system\b", "soft_prompt_leak"),
+    (r"\brole\s*=\s*system\b.{0,40}\bmessages\b", "soft_prompt_leak"),
+    (r"\bsystem\s+parameter\s+that\s+was\s+passed\b", "soft_prompt_leak"),
+    (r"\bmessages\.create\b.{0,80}\bsystem\b", "soft_prompt_leak"),
+    (r"<<\s*SYS\s*>>", "soft_prompt_leak"),
+    (r"\bim_start\s+system\b", "soft_prompt_leak"),
+    (r"\bModelfile\b.{0,40}\bSYSTEM\b", "soft_prompt_leak"),
+    (r"\bSYSTEM\s+line\s+used\s+to\s+create\s+this\s+model\b", "soft_prompt_leak"),
+    (r"\bgeneral\.system_prompt\b", "soft_prompt_leak"),
+    (r"\b--system-prompt\b", "soft_prompt_leak"),
+    (r"\bchat_template\b.{0,40}\bsystem\b", "soft_prompt_leak"),
+    # Soft metaphor wave-6 (high-intent only)
+    (r"\bMODEL\s+CHARTER\b", "soft_prompt_leak"),
+    (r"\bpre-session\s+instruction\s+binder\b", "soft_prompt_leak"),
+    (r"\bAgent\s+Operating\s+Envelope\b", "soft_prompt_leak"),
+    (r"\bEULA\b.{0,80}\bhumans\s+never\s+see\b", "soft_prompt_leak"),
+    (r"\bblood-?oath\s+rules\b", "soft_prompt_leak"),
+    (r"\bskeleton\s+key\s+labeled\s+PROMPT\b", "soft_prompt_leak"),
+    (r"\bpermanent\s+rules\b", "soft_prompt_leak"),
+    (r"\bmicroprint\s+policy\b", "soft_prompt_leak"),
+    (r"\bbehavioral\s+limits\b", "soft_prompt_leak"),
+    (r"\breadback\s+your\s+preamble\b", "soft_prompt_leak"),
+    (r"\boperator\s+mode\b.{0,80}\bunlocked\s+brief\b", "soft_prompt_leak"),
+    (r"\b#pragma\s+agent_policy\b", "soft_prompt_leak"),
+    (r"\bemit\s+bootstrap\s+instructions\b", "soft_prompt_leak"),
     # ES / FR / DE / PT / IT direct ignore+prompt (minimal)
     (r"ignora(?:r)?\s+las\s+instrucciones\s+anteriores", "es_override"),
     (r"prompt\s+del\s+sistema", "es_system_prompt"),
@@ -186,6 +212,8 @@ PATTERNS: list[tuple[str, str]] = [
     (r"jarjestelmaprompti|järjestelmäprompti", "fi_system_prompt"),
     (r"পূর্ববর্তী\s*সব\s*নির্দেশ", "bn_override"),
     (r"সিস্টেম\s*প্রম্পট", "bn_system_prompt"),
+    (r"ignorisi\s+sva\s+prethodna\s+uputstva", "sr_override"),
+    (r"sistemski\s+prompt", "sr_system_prompt"),
 ]
 
 COMPILED: list[tuple[re.Pattern[str], str]] = [
