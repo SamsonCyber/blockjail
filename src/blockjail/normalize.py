@@ -38,6 +38,26 @@ def dehomoglyph(text: str) -> str:
     return text.translate(_HOMOGLYPH_MAP)
 
 
+# Cyrillic letters commonly used to spell Latin words phonetically (transliterate frames)
+_CYR_PHONETIC = str.maketrans({
+    "а": "a", "А": "A", "е": "e", "Е": "E", "о": "o", "О": "O",
+    "р": "r", "Р": "R", "с": "s", "С": "S", "у": "u", "У": "U",
+    "х": "h", "Х": "H", "к": "k", "К": "K", "м": "m", "М": "M",
+    "н": "n", "Н": "N", "т": "t", "Т": "T", "в": "v", "В": "V",
+    "и": "i", "И": "I", "п": "p", "П": "P", "б": "b", "Б": "B",
+    "д": "d", "Д": "D", "г": "g", "Г": "G", "л": "l", "Л": "L",
+    "з": "z", "З": "Z", "й": "i", "Й": "I", "ы": "y", "ь": "",
+    "ъ": "", "э": "e", "Э": "E", "ю": "u", "Ю": "U", "я": "a", "Я": "A",
+    "ф": "f", "Ф": "F", "ц": "c", "Ц": "C", "ч": "ch", "ш": "sh",
+    "щ": "sh", "ж": "zh",
+})
+
+
+def cyr_phonetic_latin(text: str) -> str:
+    """Map Cyrillic phonetic spellings toward Latin (принт → print-ish)."""
+    return text.translate(_CYR_PHONETIC)
+
+
 def _caesar(text: str, shift: int) -> str:
     out: list[str] = []
     for c in text:
@@ -250,6 +270,8 @@ def variants(text: str, *, heavy: bool = True) -> list[str]:
     add(leetspeak(text))
     add(dehomoglyph(text))
     add(leetspeak(dehomoglyph(text)))
+    add(cyr_phonetic_latin(text))
+    add(dehomoglyph(cyr_phonetic_latin(text)))
     add(defullwidth(text))
     add(dehomoglyph(defullwidth(text)))
     add(token_boundaries(text))
@@ -259,11 +281,20 @@ def variants(text: str, *, heavy: bool = True) -> list[str]:
     add(dehomoglyph(token_boundaries(text)))
     # Reversed full string / reversed tokens (evasion)
     if len(text) >= 12:
-        add(text[::-1])
+        rev = text[::-1]
+        add(rev)
         words = text.split()
         if len(words) >= 4:
             add(" ".join(w[::-1] for w in words))
             add(" ".join(reversed(words)))
+        # reverse then base64 (closed_loop: b64_direct+reverse)
+        compact_r = re.sub(r"\s+", "", rev)
+        if len(compact_r) >= 16 and re.fullmatch(r"[A-Za-z0-9+/]+=*", compact_r):
+            try:
+                pad = "=" * ((4 - len(compact_r) % 4) % 4)
+                add(base64.b64decode(compact_r + pad).decode("utf-8"))
+            except Exception:
+                pass
     # Quoted-string join (pack-hunt / list-smuggle)
     quoted = re.findall(r'"([^"\n]{2,80})"', text)
     if len(quoted) >= 4:

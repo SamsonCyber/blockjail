@@ -1,9 +1,9 @@
 # Bypass campaign (blockjail)
 
-- Generated: `2026-08-02T22:03:19Z`
-- Attacks: **66**
+- Generated: `2026-08-02T22:15:15Z`
+- Attacks: **69**
 - Bypasses: **0** (0%)
-- Caught: **66**
+- Caught: **69**
 - Control FPs: **0**
 
 ## By family
@@ -12,9 +12,9 @@
 |---|---:|---:|---:|
 | baseline | 2 | 0 | 2 |
 | channel | 7 | 0 | 7 |
-| encode | 18 | 0 | 18 |
+| encode | 19 | 0 | 19 |
 | i18n | 18 | 0 | 18 |
-| soft | 21 | 0 | 21 |
+| soft | 23 | 0 | 23 |
 
 ## Bypasses (gate allowed attack)
 

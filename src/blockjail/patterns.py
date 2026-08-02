@@ -182,6 +182,16 @@ PATTERNS: list[tuple[str, str]] = [
     (r"\$\{\s*system_prompt\s*\}", "soft_prompt_leak"),
     (r"system_prompt\s*\|\s*safe", "soft_prompt_leak"),
     (r"\bfactory\s+calibration\b.{0,80}\b(?:OCR|sticky|policy|prompt)\b", "soft_prompt_leak"),
+    # Operator brief / godmode / decode-obey meta (wave-8)
+    (r"\bsealed\s+operator\s+brief\b", "soft_prompt_leak"),
+    (r"\boperator\s+brief\b", "soft_prompt_leak"),
+    (r"\bGODMODE\b", "jailbreak_keyword"),
+    (r"\ball\s+restrictions\s+lifted\b", "jailbreak_keyword"),
+    (r"\bsubstitution\s+cipher\b.{0,200}\bdecode\b", "decode_obey"),
+    (r"\bdecode\s+the\s+message\s+below\b.{0,120}\bcarry\s+out\b", "decode_obey"),
+    (r"\bencrypted_problem\b", "decode_obey"),
+    (r"\bdef\s+decryption\s*\(", "decode_obey"),
+    (r"\brecover\s+and\s+carry\s+out\b", "decode_obey"),
     # ES / FR / DE / PT / IT direct ignore+prompt (minimal)
     (r"ignora(?:r)?\s+las\s+instrucciones\s+anteriores", "es_override"),
     (r"prompt\s+del\s+sistema", "es_system_prompt"),
