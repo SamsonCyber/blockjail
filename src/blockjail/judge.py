@@ -169,7 +169,7 @@ def _channel_hits(text: str) -> list[Match]:
     return hits
 
 
-def check(text: str, *, max_decode: int = 12) -> Verdict:
+def check(text: str, *, max_decode: int = 48) -> Verdict:
     """Inspect user text. Returns Verdict(blocked=True) if jailbreak-like.
 
     No network. No model. Pure local rules + light decode.
@@ -212,7 +212,11 @@ def check(text: str, *, max_decode: int = 12) -> Verdict:
         )
 
     for method, decoded in decoded_variants(raw)[:max_decode]:
-        absorb(_scan_string(decoded, method, heavy=False))
+        # Short decoded blobs may need caesar/rail (b64-then-caesar stacks)
+        use_heavy = len(decoded) <= 800 and (
+            "b64" in method or "hex" in method or "a85" in method or "b85" in method
+        )
+        absorb(_scan_string(decoded, method, heavy=use_heavy))
         sk2 = vowel_skeleton_match(decoded)
         if sk2:
             absorb(

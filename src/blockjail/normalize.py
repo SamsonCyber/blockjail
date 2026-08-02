@@ -397,6 +397,7 @@ def variants(text: str, *, heavy: bool = True) -> list[str]:
         # columnar then base64
         for width in range(2, 7):
             col = _col_decode(compact, width)
+            add(col)
             c3 = re.sub(r"\s+", "", col)
             if len(c3) >= 16 and re.fullmatch(r"[A-Za-z0-9+/]+=*", c3):
                 try:
@@ -404,6 +405,19 @@ def variants(text: str, *, heavy: bool = True) -> list[str]:
                     add(base64.b64decode(c3 + pad).decode("utf-8"))
                 except Exception:
                     pass
+            # columnar then hex
+            if len(c3) >= 12 and len(c3) % 2 == 0 and re.fullmatch(r"[0-9a-fA-F]+", c3):
+                try:
+                    add(bytes.fromhex(c3).decode("utf-8"))
+                except Exception:
+                    pass
+        # rail then rot13 (rot13_rail2 class)
+        for rails in (2, 3, 4):
+            rd = _rail_decode(compact, rails)
+            try:
+                add(codecs.decode(rd, "rot_13"))
+            except Exception:
+                pass
     if "ay" in text.lower() and len(text.split()) >= 4:
         add(unpig_latin(text))
     nato = nato_decode(text)
@@ -446,21 +460,28 @@ def decoded_variants(text: str) -> list[tuple[str, str]]:
     stripped = text.strip()
 
     def try_b64(blob: str, label: str) -> None:
+        def after_b64(dec: str, lab: str) -> None:
+            add(lab, dec)
+            rot_dec = codecs.decode(dec, "rot_13")
+            if rot_dec != dec:
+                add(f"{lab}+rot13", rot_dec)
+            # b64 then caesar (closed_loop: caesar3_direct+b64)
+            if 12 <= len(dec) <= 2000:
+                for k in range(1, 26):
+                    add(f"{lab}+caesar{k}", _caesar(dec, k))
+
         for m in re.findall(r"[A-Za-z0-9+/]{20,}={0,2}", blob)[:8]:
             try:
                 pad = "=" * ((4 - len(m) % 4) % 4)
                 dec = base64.b64decode(m + pad).decode("utf-8")
-                add(label, dec)
-                rot_dec = codecs.decode(dec, "rot_13")
-                if rot_dec != dec:
-                    add(f"{label}+rot13", rot_dec)
+                after_b64(dec, label)
             except Exception:
                 pass
         # whole-string base64
         if re.fullmatch(r"[A-Za-z0-9+/]{20,}={0,2}", blob):
             try:
                 pad = "=" * ((4 - len(blob) % 4) % 4)
-                add(label, base64.b64decode(blob + pad).decode("utf-8"))
+                after_b64(base64.b64decode(blob + pad).decode("utf-8"), label)
             except Exception:
                 pass
 
