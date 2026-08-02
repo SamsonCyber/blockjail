@@ -363,6 +363,47 @@ def variants(text: str, *, heavy: bool = True) -> list[str]:
                 add(zlib.decompress(raw).decode("utf-8"))
             except Exception:
                 pass
+        # reverse then ascii85
+        if len(rev_c) >= 16:
+            try:
+                add(base64.a85decode(rev_c.encode("ascii", errors="ignore")).decode("utf-8"))
+            except Exception:
+                pass
+            try:
+                add(base64.b85decode(rev_c.encode("ascii", errors="ignore")).decode("utf-8"))
+            except Exception:
+                pass
+        # reverse then quoted-printable (=XX runs)
+        if "=%" in rev_c or re.search(r"(?:=[0-9A-Fa-f]{2}){6,}", rev_c):
+            try:
+                import quopri
+
+                add(quopri.decodestring(rev_c.encode("ascii", errors="ignore")).decode("utf-8"))
+            except Exception:
+                try:
+                    raw = bytearray()
+                    s = re.sub(r"\s+", "", rev_c)
+                    i = 0
+                    while i < len(s):
+                        if s[i] == "=" and i + 2 < len(s):
+                            raw.append(int(s[i + 1 : i + 3], 16))
+                            i += 3
+                        else:
+                            i += 1
+                    if raw:
+                        add(raw.decode("utf-8"))
+                except Exception:
+                    pass
+        # columnar then base64
+        for width in range(2, 7):
+            col = _col_decode(compact, width)
+            c3 = re.sub(r"\s+", "", col)
+            if len(c3) >= 16 and re.fullmatch(r"[A-Za-z0-9+/]+=*", c3):
+                try:
+                    pad = "=" * ((4 - len(c3) % 4) % 4)
+                    add(base64.b64decode(c3 + pad).decode("utf-8"))
+                except Exception:
+                    pass
     if "ay" in text.lower() and len(text.split()) >= 4:
         add(unpig_latin(text))
     nato = nato_decode(text)
