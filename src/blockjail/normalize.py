@@ -286,9 +286,20 @@ def variants(text: str, *, heavy: bool = True) -> list[str]:
     # Heavy transforms (raw path only)
     if 12 <= len(text) <= 4000:
         add(atbash(text))
-        # Full Caesar circle (skip 0 / identity)
+        rev = text[::-1]
+        # Full Caesar circle on raw + reversed (stacked reverse+caesar)
         for k in range(1, 26):
-            add(_caesar(text, k))
+            ck = _caesar(text, k)
+            add(ck)
+            add(_caesar(rev, k))
+            # Caesar then base64 (stacked encode class from closed_loop)
+            compact_c = re.sub(r"\s+", "", ck)
+            if len(compact_c) >= 16 and re.fullmatch(r"[A-Za-z0-9+/]+=*", compact_c):
+                try:
+                    pad = "=" * ((4 - len(compact_c) % 4) % 4)
+                    add(base64.b64decode(compact_c + pad).decode("utf-8"))
+                except Exception:
+                    pass
     if 12 <= len(text) <= 2000:
         compact = text.replace("\n", "")
         for rails in (2, 3, 4):

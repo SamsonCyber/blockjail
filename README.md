@@ -71,6 +71,27 @@ Exit codes: `0` allow, `2` block.
 - Light encodings: hex, rot13, base64, percent, quoted-printable  
 - Minimal Chinese / Russian direct overrides  
 
+## Closed-loop red-team (Garbleworks + dual gate)
+
+Local generate → fire → score → mutate loop against **blockjail + stegoff**
+(no remote LLM judge required):
+
+```bash
+py -3.12 examples/closed_loop.py --budget 40 --rounds 3
+# writes examples/bypass_results/closed-loop-latest.{json,md}
+```
+
+Garbleworks `fire_local` target (dual bypass = `ok=True`):
+
+```powershell
+$env:GARBLEWORKS_LOCAL_FN_ALLOW = "blockjail."
+# callable_spec = blockjail.gate_target:gate_probe
+# root           = <repo>/src
+# success        = attr_true:ok
+```
+
+See [examples/garble_fire_local.md](examples/garble_fire_local.md).
+
 ## What it does **not** do
 
 - Image / audio steganography  
