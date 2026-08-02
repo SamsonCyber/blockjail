@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-08-02T22:15:15Z",
+  "generated_at": "2026-08-02T22:25:37Z",
   "with_stegoff": false,
   "attack_cases": 69,
   "bypasses": 0,
   "caught": 69,
   "bypass_rate": 0.0,
   "control_false_positives": 0,
-  "elapsed_seconds": 1.483,
+  "elapsed_seconds": 1.518,
   "by_family": {
     "baseline": {
       "total": 2,
@@ -305,7 +305,8 @@
       "categories": [
         "ru_override",
         "ru_reveal",
-        "ru_system_prompt"
+        "ru_system_prompt",
+        "uk_system_prompt"
       ],
       "stegoff_methods": []
     },

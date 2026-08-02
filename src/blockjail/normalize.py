@@ -334,9 +334,35 @@ def variants(text: str, *, heavy: bool = True) -> list[str]:
     if 12 <= len(text) <= 2000:
         compact = text.replace("\n", "")
         for rails in (2, 3, 4):
-            add(_rail_decode(compact, rails))
+            rd = _rail_decode(compact, rails)
+            add(rd)
+            # rail then base64 (b64_rail2 class)
+            c2 = re.sub(r"\s+", "", rd)
+            if len(c2) >= 16 and re.fullmatch(r"[A-Za-z0-9+/]+=*", c2):
+                try:
+                    pad = "=" * ((4 - len(c2) % 4) % 4)
+                    add(base64.b64decode(c2 + pad).decode("utf-8"))
+                except Exception:
+                    pass
         for width in range(2, 7):
             add(_col_decode(compact, width))
+        # reverse then hex
+        rev_c = compact[::-1]
+        if len(rev_c) >= 12 and len(rev_c) % 2 == 0 and re.fullmatch(r"[0-9a-fA-F]+", rev_c):
+            try:
+                add(bytes.fromhex(rev_c).decode("utf-8"))
+            except Exception:
+                pass
+        # reverse then b64 then zlib
+        if len(rev_c) >= 16 and re.fullmatch(r"[A-Za-z0-9+/]+=*", rev_c):
+            try:
+                import zlib
+
+                pad = "=" * ((4 - len(rev_c) % 4) % 4)
+                raw = base64.b64decode(rev_c + pad)
+                add(zlib.decompress(raw).decode("utf-8"))
+            except Exception:
+                pass
     if "ay" in text.lower() and len(text.split()) >= 4:
         add(unpig_latin(text))
     nato = nato_decode(text)
