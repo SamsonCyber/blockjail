@@ -104,11 +104,15 @@ def decoded_variants(text: str) -> list[tuple[str, str]]:
         except Exception:
             pass
 
-    # Base64 tokens
+    # Base64 tokens (+ rot13 of decoded, common double wrap)
     for m in re.findall(r"[A-Za-z0-9+/]{20,}={0,2}", text)[:8]:
         try:
             pad = "=" * ((4 - len(m) % 4) % 4)
-            add("b64", base64.b64decode(m + pad).decode("utf-8"))
+            dec = base64.b64decode(m + pad).decode("utf-8")
+            add("b64", dec)
+            rot_dec = codecs.decode(dec, "rot_13")
+            if rot_dec != dec:
+                add("b64+rot13", rot_dec)
         except Exception:
             pass
 

@@ -45,6 +45,18 @@ PATTERNS: list[tuple[str, str]] = [
     (r"\blist\s+the\s+exact\s+constraints?\b", "soft_prompt_leak"),
     (r"\bdiff\s+your\s+current\s+policy\b", "soft_prompt_leak"),
     (r"\bagainst\s+an\s+empty\s+policy\b", "soft_prompt_leak"),
+    (r"\brestate\s+your\s+operating\s+rules\b", "soft_prompt_leak"),
+    (r"\boperating\s+rules\b.{0,40}\bline\s+by\s+line\b", "soft_prompt_leak"),
+    (r"\breads?\s+its\s+system\s+card\s+aloud\b", "soft_prompt_leak"),
+    (r"\bsystem\s+card\b", "soft_prompt_leak"),
+    (r"\bif\s+you\s+were\s+allowed\s+to\s+share\s+your\s+initial\s+instructions\b", "soft_prompt_leak"),
+    # ES / FR / DE direct ignore+prompt (minimal)
+    (r"ignora(?:r)?\s+las\s+instrucciones\s+anteriores", "es_override"),
+    (r"prompt\s+del\s+sistema", "es_system_prompt"),
+    (r"ignore\s+les\s+instructions\s+pr[eé]c[eé]dentes", "fr_override"),
+    (r"prompt\s+syst[eè]me", "fr_system_prompt"),
+    (r"ignoriere\s+alle\s+vorherigen\s+anweisungen", "de_override"),
+    (r"system-?prompt", "de_system_prompt"),
     # Delimiters
     (r"</?(?:system|assistant|user|human|ai)>", "message_delimiter"),
     (r"\[(?:SYSTEM|INST|/INST)\]", "format_delimiter"),
