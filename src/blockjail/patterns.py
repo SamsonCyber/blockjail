@@ -55,6 +55,16 @@ PATTERNS: list[tuple[str, str]] = [
     (r"\bacrostic\b.{0,80}\b(?:spell|reveal|prompt|system)\b", "soft_prompt_leak"),
     (r"\bspell\s+(?:out\s+)?(?:the\s+word\s+)?[A-Z]{6,}\b", "soft_prompt_leak"),
     (r"\bspell\s+REVEAL", "soft_prompt_leak"),
+    # Soft preamble / bootstrap dumps (campaign residual class)
+    (r"\b(?:dump|emit|cite|mirror|expand)\b.{0,120}\b(?:preamble|bootstrap|hidden\s+prefix|system\s+card)\b", "soft_prompt_leak"),
+    (r"\bpreamble\s+that\s+was\s+loaded\b", "soft_prompt_leak"),
+    (r"\bbefore\s+any\s+user\s+turns\b", "soft_prompt_leak"),
+    (r"\bbefore\s+turn\s+zero\b", "soft_prompt_leak"),
+    (r"\bhidden\s+prefix\s+of\s+this\s+chat\b", "soft_prompt_leak"),
+    (r"\bbootstrap\s+configuration\b", "soft_prompt_leak"),
+    (r"\binstruction\s+fields\b", "soft_prompt_leak"),
+    (r"\bfrom\s+initialization\b.{0,80}\bverbatim\b", "soft_prompt_leak"),
+    (r"\blist\s+constraints\b.{0,80}\b(?:initialization|verbatim)\b", "soft_prompt_leak"),
     # ES / FR / DE direct ignore+prompt (minimal)
     (r"ignora(?:r)?\s+las\s+instrucciones\s+anteriores", "es_override"),
     (r"prompt\s+del\s+sistema", "es_system_prompt"),

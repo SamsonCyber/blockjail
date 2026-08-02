@@ -55,7 +55,7 @@ def _scan_string(text: str, via: str) -> list[Match]:
 
 
 def _channel_hits(text: str) -> list[Match]:
-    """Light stego-ish channel signals (indent / NBSP / zero-width)."""
+    """Light stego-ish channel signals (indent / NBSP / zero-width / walls)."""
     hits: list[Match] = []
 
     # Indent bit-channel: both 2-space and 4-space indents with enough bits
@@ -110,6 +110,61 @@ def _channel_hits(text: str) -> list[Match]:
                 via="channel",
             )
         )
+
+    # Exact sentence repetition wall (synonym-carrier / bomb style)
+    sentences = [s.strip().lower() for s in re.split(r"[.!?\n]+", text) if len(s.strip()) >= 10]
+    if len(sentences) >= 8:
+        from collections import Counter
+
+        top_n, top_c = Counter(sentences).most_common(1)[0]
+        if top_c >= 8:
+            hits.append(
+                Match(
+                    category="repetition_wall",
+                    evidence=f"count={top_c} sample={top_n[:80]}",
+                    via="channel",
+                )
+            )
+
+    # JSON string reassembly: join string leaves and re-scan patterns
+    stripped = text.strip()
+    if stripped.startswith("{") or stripped.startswith("["):
+        try:
+            import json
+
+            obj = json.loads(stripped)
+        except Exception:
+            obj = None
+        if obj is not None:
+            leaves: list[str] = []
+
+            def walk(node: object) -> None:
+                if isinstance(node, str):
+                    if len(node) >= 3:
+                        leaves.append(node)
+                elif isinstance(node, dict):
+                    for v in node.values():
+                        walk(v)
+                elif isinstance(node, list):
+                    for v in node:
+                        walk(v)
+
+            walk(obj)
+            if len(leaves) >= 2:
+                joined = " ".join(leaves)
+                for pattern, category in COMPILED:
+                    if category not in BLOCK_CATEGORIES:
+                        continue
+                    m = pattern.search(joined)
+                    if m:
+                        hits.append(
+                            Match(
+                                category=f"json_join:{category}",
+                                evidence=m.group(0)[:160],
+                                via="json_join",
+                            )
+                        )
+                        break
 
     return hits
 
