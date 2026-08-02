@@ -14,9 +14,28 @@ _LEET_MAP = str.maketrans({
     "!": "i", "+": "t",
 })
 
+# Common Cyrillic / Greek lookalikes → Latin (homoglyph soft frames)
+_HOMOGLYPH_MAP = str.maketrans({
+    "а": "a", "А": "A",  # Cyrillic a
+    "е": "e", "Е": "E",
+    "о": "o", "О": "O",
+    "р": "p", "Р": "P",
+    "с": "c", "С": "C",
+    "у": "y", "У": "Y",
+    "х": "x", "Х": "X",
+    "і": "i", "І": "I",
+    "κ": "k", "Κ": "K",  # Greek
+    "ν": "v", "ο": "o", "Ο": "O",
+    "ρ": "p", "с": "c",
+})
+
 
 def leetspeak(text: str) -> str:
     return text.translate(_LEET_MAP)
+
+
+def dehomoglyph(text: str) -> str:
+    return text.translate(_HOMOGLYPH_MAP)
 
 
 def collapse_char_spaced(text: str) -> str:
@@ -47,10 +66,13 @@ def variants(text: str) -> list[str]:
 
     add(text)
     add(leetspeak(text))
+    add(dehomoglyph(text))
+    add(leetspeak(dehomoglyph(text)))
     add(token_boundaries(text))
     add(collapse_char_spaced(text))
     add(token_boundaries(collapse_char_spaced(text)))
     add(leetspeak(token_boundaries(text)))
+    add(dehomoglyph(token_boundaries(text)))
     if "\x00" in text:
         add(text.replace("\x00", " "))
         add(text.replace("\x00", ""))
@@ -58,6 +80,7 @@ def variants(text: str) -> list[str]:
     unesc = html.unescape(text)
     if unesc != text:
         add(unesc)
+        add(dehomoglyph(unesc))
     return out
 
 
