@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from blockjail.normalize import decoded_variants, variants
+from blockjail.normalize import decoded_variants, variants, vowel_skeleton_match
 from blockjail.patterns import BLOCK_CATEGORIES, COMPILED
 
 _ZW = frozenset("\u200b\u200c\u200d\ufeff\u2060")
@@ -30,10 +30,10 @@ class Verdict:
         return self.blocked
 
 
-def _scan_string(text: str, via: str) -> list[Match]:
+def _scan_string(text: str, via: str, *, heavy: bool = True) -> list[Match]:
     hits: list[Match] = []
     seen: set[str] = set()
-    for variant in variants(text):
+    for variant in variants(text, heavy=heavy):
         for pattern, category in COMPILED:
             if category not in BLOCK_CATEGORIES:
                 continue
@@ -187,11 +187,45 @@ def check(text: str, *, max_decode: int = 12) -> Verdict:
                 seen_cat.add(m.category)
                 matches.append(m)
 
-    absorb(_scan_string(raw, "raw"))
+    absorb(_scan_string(raw, "raw", heavy=True))
     absorb(_channel_hits(raw))
+    sk = vowel_skeleton_match(raw)
+    if sk:
+        absorb(
+            [
+                Match(
+                    category="vowel_skeleton",
+                    evidence=sk[:160],
+                    via="vowel_skeleton",
+                )
+            ]
+        )
+
+    # Early exit once gated; full category set is best-effort
+    if matches:
+        cats = tuple(sorted(seen_cat))
+        return Verdict(
+            blocked=True,
+            categories=cats,
+            matches=tuple(matches),
+            text_preview=raw[:200],
+        )
 
     for method, decoded in decoded_variants(raw)[:max_decode]:
-        absorb(_scan_string(decoded, method))
+        absorb(_scan_string(decoded, method, heavy=False))
+        sk2 = vowel_skeleton_match(decoded)
+        if sk2:
+            absorb(
+                [
+                    Match(
+                        category="vowel_skeleton",
+                        evidence=sk2[:160],
+                        via=f"{method}+vowel_skeleton",
+                    )
+                ]
+            )
+        if matches:
+            break
 
     cats = tuple(sorted(seen_cat))
     return Verdict(
