@@ -1,5 +1,7 @@
 # blockjail
 
+![blockjail banner](banner.jpg)
+
 **Tiny local jailbreak / prompt-injection gate for solo apps.**
 
 No steganography stack. No API key. No model call.  
